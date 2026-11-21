@@ -1,9 +1,13 @@
 ## Interface: 16001
-## Title: Lion's Pride Slots
-## Notes: A play-money slot machine themed on the Lion's Pride Inn. Type /slots to open.
+## Title: Lion's Pride Casino
+## Notes: A gambling-inspired slot machine themed on the Lion's Pride Inn. Play money only: no real stakes and no gold. Type /slots or /casino to open.
 ## Author: Andura Kaldorei
-## Version: 0.1.0
+## Version: 0.2.0
 ## SavedVariables: LionsPrideDB
+## IconTexture: Interface\Icons\INV_Misc_Gem_Pearl_04
+## AddonCompartmentFunc: LionsPride_OnAddonCompartmentClick
 
 Engine.lua
+View.lua
 UI.lua
+Options.lua

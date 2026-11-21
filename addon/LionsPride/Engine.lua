@@ -1,4 +1,4 @@
--- Lion's Pride Slots: game rules. Pure Lua, no interface code.
+-- Lion's Pride Casino: game rules. Pure Lua, no interface code.
 -- This is a port of engine.js from the web version; keep the two in step.
 --
 -- Money model: 1 credit = one denomination (1, 2, 5 or 10 cents). Every spin plays
@@ -55,7 +55,9 @@ E.JACKPOT_GROWTH = { major = 0.01, grand = 0.05 } -- added per paid spin, in bet
 
 -- Experience: every paid spin earns XP. A full bar is a level-up, which opens the
 -- Darkmoon Faire straight away with one of these buffs.
-E.LEVEL = { spins = 200, curve = 2.4, startOrbs = 5 }
+-- The bar is a carrot on a stick: it never looks less than barFloor full, races up early, then
+-- creeps toward barCeil. It only reaches 100% on the spin that actually levels you up.
+E.LEVEL = { spins = 200, barFloor = 0.55, barCeil = 0.97, curve = 0.6, startOrbs = 5 }
 E.LEVEL_BUFFS = {
   { id = "wellfed",   name = "Well Fed", desc = "Every prize is worth double", mult = 2 },
   { id = "haste",     name = "Haste",    desc = "4 spins instead of 3",        respins = 4 },
@@ -183,8 +185,12 @@ end
 
 -- XP earned by one paid spin, as a fraction of a level.
 function E.xpGain() return (0.5 + random()) / E.LEVEL.spins end
--- How full the bar is drawn for a given real progress (0..1). The curve keeps it looking nearly full.
-function E.xpShown(xp) return 1 - (1 - min(1, max(0, xp))) ^ E.LEVEL.curve end
+-- How full the bar is drawn for a given real progress (0..1).
+function E.xpShown(xp)
+  if xp >= 1 then return 1 end
+  local L = E.LEVEL
+  return L.barFloor + (L.barCeil - L.barFloor) * max(0, xp) ^ L.curve
+end
 
 local function boosted(orb, buff)
   if buff and buff.mult and not orb.jackpot then return { x = orb.x * buff.mult } end
