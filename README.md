@@ -2,6 +2,10 @@
 
 A personal, play-money slot machine themed on the Lion's Pride Inn in Goldshire (World of Warcraft). It is a fan project made for fun: no real money, not for sale.
 
+**Not real gambling.** Every credit, bet, win and jackpot is play money. Nothing can be bought, sold, withdrawn or exchanged for anything of value.
+
+Play it in your browser: https://andrewamisola.github.io/lions-pride-slots/
+
 ![Big-win ceremony](screenshots/big-win-ceremony.jpg)
 
 ## Play
@@ -33,3 +37,5 @@ Then open http://localhost:4810. Space spins.
 ## Assets
 
 The icons, textures, fonts, sounds and music in `assets/` come from World of Warcraft and belong to Blizzard Entertainment. They are included for personal, non-commercial use only. This project is not affiliated with or endorsed by Blizzard.
+
+The layout follows the hold-and-spin style of casino slot machines; it is not connected to any slot machine maker.

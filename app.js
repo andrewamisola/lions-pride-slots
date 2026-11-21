@@ -49,29 +49,52 @@
         o.connect(g).connect(c.destination); o.start(t); o.stop(t + dur + .02);
       } catch {}
     }
-    const cache = {};
-    const get = src => cache[src] || (cache[src] = Object.assign(new Audio(src), { preload: 'auto' }));
+    // Sound effects are decoded once into memory and replayed from there. Creating an <audio>
+    // element for every sound (the old way) stutters on phones.
     const path = n => n.includes('/') ? n : `assets/sfx/${n}${n.startsWith('fanfare') ? '.mp3' : '.ogg'}`;
+    const buffers = {}, pending = {};
+    function load(src) {
+      if (buffers[src] || pending[src]) return;
+      pending[src] = fetch(src).then(r => r.arrayBuffer()).then(b => ac().decodeAudioData(b))
+        .then(buf => { buffers[src] = buf; }).catch(() => { delete pending[src]; });
+    }
+    function startBuffer(buf, vol, rate, looped) {
+      const c = ac(), src = c.createBufferSource(), g = c.createGain();
+      src.buffer = buf; src.loop = !!looped; src.playbackRate.value = rate; g.gain.value = vol;
+      src.connect(g).connect(c.destination); src.start();
+      return src;
+    }
     function play(name, vol = .6, rate = 1) {
       if (state.muted) return null;
+      const src = path(name);
       try {
-        const a = get(path(name)).cloneNode();
-        a.volume = vol; a.preservesPitch = false; a.playbackRate = rate; a.play().catch(() => {});
+        if (buffers[src]) return startBuffer(buffers[src], vol, rate);
+        load(src); // not decoded yet: play it the simple way this once
+        const a = new Audio(src); a.volume = vol; a.preservesPitch = false; a.playbackRate = rate; a.play().catch(() => {});
         return a;
       } catch { return null; }
     }
     let loop = null;
-    const loopStop = () => { if (loop) { loop.pause(); loop = null; } };
+    const loopStop = () => { if (loop) { try { if (loop.stop) loop.stop(); else loop.pause(); } catch {} loop = null; } };
     function loopStart(name, vol) {
       loopStop();
       if (state.muted) return;
-      try { loop = get(path(name)).cloneNode(); loop.loop = true; loop.volume = vol; loop.play().catch(() => {}); } catch {}
+      const src = path(name);
+      try {
+        if (buffers[src]) loop = startBuffer(buffers[src], vol, 1, true);
+        else { load(src); loop = new Audio(src); loop.loop = true; loop.volume = vol; loop.play().catch(() => {}); }
+      } catch {}
     }
-    // The count-up tick: a short coin clink, loaded once and replayed cheaply at any pitch.
-    let tickBuf = null, tickLoading = false;
-    function loadTick() {
-      if (tickBuf || tickLoading) return; tickLoading = true;
-      fetch('assets/sfx/cointick.ogg').then(r => r.arrayBuffer()).then(b => ac().decodeAudioData(b)).then(buf => { tickBuf = buf; }).catch(() => { tickLoading = false; });
+    const loadTick = () => load(path('cointick'));
+    // Decode every effect shortly after the first tap or key press (browsers need one before audio can start).
+    let preloaded = false;
+    function preload() {
+      if (preloaded) return; preloaded = true;
+      try { ac().resume(); } catch {}
+      const names = ['scrollbutton', 'bonusroll_start', 'bonusroll_loop', 'bonusroll_end', 'lootcoinsmall', 'lootcoinlarge', 'cointick',
+        'questaccept', 'questfailed', 'questcomplete', 'levelup', 'moneyopen'];
+      const symbolSounds = E.SYMBOLS.flatMap(sym => [].concat(sym.sound || []));
+      names.map(path).concat(symbolSounds).forEach((src, i) => setTimeout(() => load(src), 60 * i));
     }
     // Suspense: a rising, quickening whine with a heartbeat under it. Returns a function that cuts it off.
     function riser(ms) {
@@ -89,9 +112,8 @@
         return () => { try { g.gain.cancelScheduledValues(c.currentTime); g.gain.setTargetAtTime(0, c.currentTime, .02); } catch {} };
       } catch { return () => {}; }
     }
-    ['bonusroll_loop', 'bonusroll_start', 'bonusroll_end', 'scrollbutton', 'lootcoinsmall', 'lootcoinlarge', 'questaccept'].forEach(n => get(path(n)));
     return {
-      play, riser, silence: loopStop,
+      play, riser, preload, silence: loopStop,
       // A symbol's sound: one file, or a random pick from a list.
       voice: (sound, vol = .65) => { if (sound) play(Array.isArray(sound) ? sound[Math.floor(Math.random() * sound.length)] : sound, vol); },
       click: () => play('scrollbutton', .5),
@@ -109,11 +131,9 @@
       tick(p) {
         if (state.muted) return;
         try {
-          const c = ac();
-          if (!tickBuf) { loadTick(); tone(900 + 700 * p, .04, 'triangle', .09); return; }
-          const s = c.createBufferSource(), g = c.createGain();
-          s.buffer = tickBuf; s.playbackRate.value = .85 + .8 * p; g.gain.value = .55;
-          s.connect(g).connect(c.destination); s.start();
+          const buf = buffers[path('cointick')];
+          if (!buf) { loadTick(); tone(900 + 700 * p, .04, 'triangle', .09); return; }
+          startBuffer(buf, .55, .85 + .8 * p);
         } catch {}
       },
       loadTick,
@@ -183,7 +203,7 @@
     let parts = [], running = false, last = 0;
     const size = () => { cv.width = innerWidth; cv.height = innerHeight; };
     addEventListener('resize', size); size();
-    function start() { if (!running) { running = true; last = performance.now(); requestAnimationFrame(frame); } }
+    function start() { if (!running) { running = true; cv.classList.add('on'); last = performance.now(); requestAnimationFrame(frame); } }
     function frame(t) {
       const dt = Math.min(2.5, (t - last) / 16.7); last = t;
       g.clearRect(0, 0, cv.width, cv.height);
@@ -204,12 +224,12 @@
         }
       }
       g.globalAlpha = 1;
-      if (parts.length) requestAnimationFrame(frame); else running = false;
+      if (parts.length) requestAnimationFrame(frame); else { running = false; cv.classList.remove('on'); }
     }
     function burst() {
       const x = innerWidth * (.12 + Math.random() * .76), y = innerHeight * (.08 + Math.random() * .42);
       const col = colors[Math.floor(Math.random() * colors.length)], col2 = colors[Math.floor(Math.random() * colors.length)];
-      for (let i = 0; i < 54; i++) {
+      for (let i = 0, n = innerWidth < 600 ? 30 : 54; i < n; i++) {
         const a = Math.random() * Math.PI * 2, v = 1.4 + Math.random() * 4.4;
         parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 1, decay: .011 + Math.random() * .012, col: i % 3 ? col : col2 });
       }
@@ -241,28 +261,36 @@
   reels.forEach((r, i) => { r.firstChild.innerHTML = lastHTML[i].join(''); });
   const cellAt = (reel, row) => reels[reel].firstChild.children[row];
 
-  function animateReel(i, finalCol, duration, slow) {
+  // A reel spins as a short strip of 6 symbols looping, then swaps to the result plus a few
+  // symbols and eases to a stop. The old way (one strip with every symbol that scrolls past,
+  // up to 150 of them on a suspense spin) made layers too large for phones.
+  const LAND_MS = 380, LAND_CELLS = 4;
+  function animateReel(i, finalCol, duration) {
     return new Promise(resolve => {
       const reel = reels[i], strip = reel.firstChild;
-      const filler = Array.from({ length: Math.round(duration * .024) }, randomCell);
-      const cells = [...finalCol, ...filler, ...lastHTML[i]];
-      strip.innerHTML = cells.join('');
-      const h = reel.clientHeight / E.ROWS;
-      strip.style.transition = 'none';
-      strip.style.transform = `translateY(${-(cells.length - E.ROWS) * h}px)`;
-      void strip.offsetHeight;
-      strip.style.transition = `transform ${duration}ms ${slow ? 'cubic-bezier(.3,.45,.4,1)' : 'cubic-bezier(.12,.55,.25,1)'}`;
-      strip.style.transform = 'translateY(0)';
-      let finished = false;
-      const done = () => {
-        if (finished) return; finished = true;
-        strip.style.transition = 'none'; strip.style.transform = 'none';
-        strip.innerHTML = finalCol.join('');
-        reel.classList.remove('land'); void reel.offsetWidth; reel.classList.add('land');
-        resolve();
-      };
-      strip.addEventListener('transitionend', done, { once: true });
-      setTimeout(done, duration + 150); // in case transitionend never fires (hidden tab)
+      const loopCells = Array.from({ length: 6 }, randomCell).join('');
+      strip.style.transition = 'none'; strip.style.transform = '';
+      strip.innerHTML = loopCells + loopCells;
+      reel.classList.add('spinning');
+      setTimeout(() => {
+        reel.classList.remove('spinning');
+        strip.innerHTML = finalCol.join('') + Array.from({ length: LAND_CELLS }, randomCell).join('');
+        const h = reel.clientHeight / E.ROWS;
+        strip.style.transform = `translateY(${-LAND_CELLS * h}px)`;
+        void strip.offsetHeight;
+        strip.style.transition = `transform ${LAND_MS}ms cubic-bezier(.16,.8,.3,1)`;
+        strip.style.transform = 'translateY(0)';
+        let finished = false;
+        const done = () => {
+          if (finished) return; finished = true;
+          strip.style.transition = 'none'; strip.style.transform = 'none';
+          strip.innerHTML = finalCol.join('');
+          reel.classList.remove('land'); void reel.offsetWidth; reel.classList.add('land');
+          resolve();
+        };
+        strip.addEventListener('transitionend', done, { once: true });
+        setTimeout(done, LAND_MS + 150); // in case transitionend never fires (hidden tab)
+      }, Math.max(0, duration - LAND_MS));
     });
   }
 
@@ -287,7 +315,7 @@
     svg.setAttribute('viewBox', `0 0 ${svg.clientWidth} ${svg.clientHeight}`);
     const d = denom();
     const items = ev.wins.map(w => ({
-      cells: w.cells, poly: `<polyline points="${linePoints(w)}"/>`,
+      cells: w.cells, poly: (pts => `<polyline class="under" points="${pts}"/><polyline points="${pts}"/>`)(linePoints(w)),
       text: `Line ${w.line + 1} · ${w.count}× ${E.SYM[w.symbol].name} · ${money(w.amount * d)}`,
     }));
     if (ev.scatter.win) items.push({ cells: ev.scatter.cells, poly: '', text: `${ev.scatter.count}× Portal · ${money(ev.scatter.win * d)}` });
@@ -390,7 +418,8 @@
 
     // Fireworks and coins keep going for the whole count.
     let volley = 0;
-    const show = setInterval(() => { if (!skip) { fireworks(1, 0, volley++ % 3 !== 0); coinShower(6, 380); } }, 400);
+    const small = innerWidth < 600;
+    const show = setInterval(() => { if (!skip) { fireworks(1, 0, volley++ % 3 !== 0); coinShower(small ? 3 : 6, 380); } }, small ? 600 : 400);
     const t0 = performance.now();
     await new Promise(resolve => {
       const timer = setInterval(() => {
@@ -413,7 +442,7 @@
           if (!skip) { sfx.bigBoom(); thud(); fireworks(5, 160); coinShower(36, 700); }
         }
         if (p >= 1) { clearInterval(timer); clearInterval(show); resolve(); }
-      }, 16);
+      }, 33); // 30 updates a second is plenty for a number
     });
     removeEventListener('keydown', onSkip); box.removeEventListener('pointerdown', onSkip);
 
@@ -631,7 +660,7 @@
     }
 
     let cutRiser = null;
-    await Promise.all(res.grid.map((col, i) => animateReel(i, finalHTML[i], plan[i].t, !!plan[i].tease).then(() => {
+    await Promise.all(res.grid.map((col, i) => animateReel(i, finalHTML[i], plan[i].t).then(() => {
       const p = plan[i], next = plan[i + 1];
       reels[i].classList.remove('antic');
       if (cutRiser) { cutRiser(); cutRiser = null; }
@@ -759,6 +788,7 @@
   $('muteBtn').addEventListener('click', () => { state.muted = !state.muted; if (state.muted) sfx.silence(); music.sync(); save(); updateUI(); });
   $('musicBtn').addEventListener('click', () => { state.music = !state.music; music.sync(); save(); updateUI(); });
   $('rulesBtn').addEventListener('click', () => { renderRules(); $('rulesDialog').showModal(); });
+  $('aboutLink').addEventListener('click', e => { e.preventDefault(); renderRules(); $('rulesDialog').showModal(); $('aboutHead').scrollIntoView(); });
   $('statsBtn').addEventListener('click', () => { renderStats(); $('statsDialog').showModal(); });
   $('denomBtn').addEventListener('click', () => { renderDenoms(); $('denomDialog').showModal(); });
   $('denomChoices').addEventListener('click', e => {
@@ -783,11 +813,11 @@
     if (e.code === 'Space' && !document.querySelector('dialog[open]')) { e.preventDefault(); if (!inFree()) spin(); }
   });
   // Browsers only allow music after a click or key press, so start it on the first one.
-  const startMusic = () => { music.sync(); removeEventListener('pointerdown', startMusic); removeEventListener('keydown', startMusic); };
+  const startMusic = () => { music.sync(); sfx.preload(); removeEventListener('pointerdown', startMusic); removeEventListener('keydown', startMusic); };
   addEventListener('pointerdown', startMusic); addEventListener('keydown', startMusic);
 
-  // Scale the 600 x 1034 machine to fit the window.
-  const STAGE_H = 1034;
+  // Scale the 600 x 1072 machine to fit the window.
+  const STAGE_H = 1072;
   function fit() {
     const s = Math.min(innerWidth / 600, innerHeight / STAGE_H);
     const stage = $('stage');
