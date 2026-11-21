@@ -816,8 +816,8 @@
   const startMusic = () => { music.sync(); sfx.preload(); removeEventListener('pointerdown', startMusic); removeEventListener('keydown', startMusic); };
   addEventListener('pointerdown', startMusic); addEventListener('keydown', startMusic);
 
-  // Scale the 600 x 1072 machine to fit the window.
-  const STAGE_H = 1072;
+  // Scale the 600 x 1082 machine to fit the window.
+  const STAGE_H = 1082;
   function fit() {
     const s = Math.min(innerWidth / 600, innerHeight / STAGE_H);
     const stage = $('stage');

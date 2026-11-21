@@ -32,8 +32,8 @@
   body::after { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
     background: radial-gradient(ellipse at 50% 45%, #0000 30%, #000d 100%), linear-gradient(#0a183866, #050a1c99); }
   #viewport { position: fixed; inset: 0; }
-  /* The whole machine is drawn at 600 x 1072 and scaled to fit the window (see fit() in app.js). */
-  #stage { position: absolute; left: 50%; top: 0; width: 600px; height: 1072px; padding-top: 22px; margin-left: -300px; transform-origin: top center; }
+  /* The whole machine is drawn at 600 x 1082 and scaled to fit the window (see fit() in app.js). */
+  #stage { position: absolute; left: 50%; top: 0; width: 600px; height: 1082px; padding-top: 22px; margin-left: -300px; transform-origin: top center; }
 
   /* ---------- screen ---------- */
   .screen {
@@ -418,7 +418,7 @@
     </div>
     <button class="spin" id="spinBtn">SPIN</button>
   </div>
-  <p class="fineprint">Play money only: no real money, prizes or purchases. Just for fun.<br>Unofficial fan project, not affiliated with Blizzard. <a href="#" id="aboutLink">Credits</a></p>
+  <p class="fineprint">Play money only: no real money, prizes or purchases. Just for fun.<br>Unofficial fan project by Andura Kaldorei, not affiliated with Blizzard. <a href="#" id="aboutLink">Credits</a></p>
 </div></div>
 
 <dialog id="rulesDialog">
@@ -435,6 +435,7 @@
     <h3>Jackpots</h3>
     <p class="small" id="jpNote"></p>
     <h3 id="aboutHead">About and credits</h3>
+    <p class="small">Made by <b>Andura Kaldorei</b>, RP-PvP realm, WoW Forever.</p>
     <p class="small"><b>This is not real gambling.</b> Every credit, bet, win and jackpot here is play money. Nothing can be bought, sold, withdrawn or exchanged for anything of value, and inserting a bill costs nothing. It is a game made for fun.</p>
     <p class="small">Lion's Pride is an unofficial fan project. The icons, textures, sounds, music and fonts come from World of Warcraft and are the property of Blizzard Entertainment. This project is not affiliated with, endorsed by or sponsored by Blizzard, and is not for sale.</p>
     <p class="small">The layout follows the hold-and-spin style of casino slot machines; it is not connected to any slot machine maker. Source code: <a href="https://github.com/andrewamisola/lions-pride-slots" target="_blank" rel="noopener">github.com/andrewamisola/lions-pride-slots</a></p>
@@ -468,6 +469,6 @@
 <div id="groundFaire"></div>
 <canvas id="fx"></canvas>
 <script src="engine.js?v=15"></script>
-<script src="app.js?v=16"></script>
+<script src="app.js?v=17"></script>
 </body>
 </html>

@@ -6,6 +6,8 @@ A personal, play-money slot machine themed on the Lion's Pride Inn in Goldshire 
 
 Play it in your browser: https://andrewamisola.github.io/lions-pride-slots/
 
+Made by Andura Kaldorei (RP-PvP realm, WoW Forever).
+
 ![Big-win ceremony](screenshots/big-win-ceremony.jpg)
 
 ## Play
