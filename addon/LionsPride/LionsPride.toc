@@ -1,0 +1,9 @@
+## Interface: 16001
+## Title: Lion's Pride Slots
+## Notes: A play-money slot machine themed on the Lion's Pride Inn. Type /slots to open.
+## Author: Andura Kaldorei
+## Version: 0.1.0
+## SavedVariables: LionsPrideDB
+
+Engine.lua
+UI.lua
