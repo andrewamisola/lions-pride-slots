@@ -1,6 +1,6 @@
-# Lion's Pride Slots
+# Lion's Pride Casino
 
-A personal, play-money slot machine themed on the Lion's Pride Inn in Goldshire (World of Warcraft). It is a fan project made for fun: no real money, not for sale.
+A gambling-inspired, play-money slot machine themed on the Lion's Pride Inn in Goldshire (World of Warcraft). It is a fan project made for fun: no real money, not for sale.
 
 **Not real gambling.** Every credit, bet, win and jackpot is play money. Nothing can be bought, sold, withdrawn or exchanged for anything of value.
 

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Lion's Pride Slots</title>
+<title>Lion's Pride Casino</title>
 <style>
   /* WoW's own typefaces: Friz Quadrata (UI text), Morpheus (titles), Skurri (big numbers). */
   @font-face { font-family: "Friz Quadrata"; src: url(assets/fonts/frizqt.ttf); font-display: swap; }
@@ -61,12 +61,12 @@
   .roof::before { inset: 0; background: linear-gradient(#0002, #0007), url(assets/ui/inn-beam.jpg) 0 0 / 256px 58px; }
   .roof::after { inset: 9px 8px 7px; background: linear-gradient(#0000 35%, #0008), url(assets/ui/inn-roof.jpg) 50% 0 / 190px;
     transition: filter 1.4s ease-in-out; }
-  .sign { position: absolute; left: 50%; bottom: -17px; transform: translateX(-50%); z-index: 2; white-space: nowrap; padding: 3px 28px 5px;
+  .sign { position: absolute; left: 50%; bottom: -17px; transform: translateX(-50%); z-index: 2; white-space: nowrap; padding: 3px 22px 5px;
     background: linear-gradient(#000000a6, #000000cc), url(assets/ui/inn-planks.jpg) 0 0 / 170px;
     border: 5px solid #2a1808; border-image: url(assets/ui/inn-beam.jpg) 14 / 5px round; box-shadow: 0 5px 10px #000c, inset 0 0 12px #000a; }
   body.faire .roof::after { filter: hue-rotate(58deg) saturate(1.35) brightness(.8); }
   h1 {
-    margin: 0; font-family: var(--title); font-weight: normal; font-size: 46px; line-height: 1; letter-spacing: .03em;
+    margin: 0; font-family: var(--title); font-weight: normal; font-size: 40px; line-height: 1.1; letter-spacing: .03em;
     background: linear-gradient(180deg, #fff3c4, var(--gold) 55%, #b5651d);
     -webkit-background-clip: text; background-clip: text; color: transparent;
     filter: drop-shadow(0 2px 0 #000) drop-shadow(0 0 10px #ff800055);
@@ -357,7 +357,7 @@
 <body>
 <div id="viewport"><div id="stage">
   <div class="screen">
-    <header class="roof"><div class="sign"><h1>Lion's Pride</h1></div></header>
+    <header class="roof"><div class="sign"><h1>Lion's Pride Casino</h1></div></header>
 
     <section class="jackpots" aria-label="Jackpots">
       <div class="jp grand" id="jpGrandBox"><small>GRAND JACKPOT</small><output id="jpGrand"></output></div>
@@ -437,7 +437,7 @@
     <h3 id="aboutHead">About and credits</h3>
     <p class="small">Made by <b>Andura Kaldorei</b>, RP-PvP realm, WoW Forever.</p>
     <p class="small"><b>This is not real gambling.</b> Every credit, bet, win and jackpot here is play money. Nothing can be bought, sold, withdrawn or exchanged for anything of value, and inserting a bill costs nothing. It is a game made for fun.</p>
-    <p class="small">Lion's Pride is an unofficial fan project. The icons, textures, sounds, music and fonts come from World of Warcraft and are the property of Blizzard Entertainment. This project is not affiliated with, endorsed by or sponsored by Blizzard, and is not for sale.</p>
+    <p class="small">Lion's Pride Casino is an unofficial fan project, a gambling-inspired game with no real stakes. The icons, textures, sounds, music and fonts come from World of Warcraft and are the property of Blizzard Entertainment. This project is not affiliated with, endorsed by or sponsored by Blizzard, and is not for sale.</p>
     <p class="small">The layout follows the hold-and-spin style of casino slot machines; it is not connected to any slot machine maker. Source code: <a href="https://github.com/andrewamisola/lions-pride-slots" target="_blank" rel="noopener">github.com/andrewamisola/lions-pride-slots</a></p>
   </div>
   <div class="dialog-actions"><button data-close>Close</button></div>
@@ -469,6 +469,6 @@
 <div id="groundFaire"></div>
 <canvas id="fx"></canvas>
 <script src="engine.js?v=18"></script>
-<script src="app.js?v=19"></script>
+<script src="app.js?v=20"></script>
 </body>
 </html>
