@@ -141,6 +141,18 @@
       bigBoom: () => { tone(64, .9, 'sine', .5, 0, 28); tone(128, .25, 'triangle', .2, 0, 50); play('levelup', .7); },
       firework: () => { if (Math.random() < .4) play('whistle' + (1 + Math.floor(Math.random() * 2)), .35); play('firework' + (1 + Math.floor(Math.random() * 6)), .6); },
       cheer: () => play('cheer' + (1 + Math.floor(Math.random() * 2)), .6),
+      // The Stormwind theme for a big-win count. It is long, so it is streamed; the returned function fades it out.
+      theme(vol = .75) {
+        if (state.muted) return () => {};
+        try {
+          const a = new Audio('assets/music/stormwind_intro.mp3');
+          a.volume = vol; a.play().catch(() => {});
+          return (ms = 1800) => {
+            const step = a.volume / (ms / 50);
+            const t = setInterval(() => { a.volume = Math.max(0, a.volume - step); if (a.volume <= .01) { clearInterval(t); a.pause(); } }, 50);
+          };
+        } catch { return () => {}; }
+      },
     };
   })();
 
@@ -341,7 +353,7 @@
   function updateXP() {
     const shown = E.xpShown(state.xp);
     $('xpFill').style.width = (shown * 100).toFixed(1) + '%';
-    $('xpBox').classList.toggle('hot', shown >= .9);
+    $('xpBox').classList.toggle('hot', shown >= .93);
   }
   function countTo(el, from, to, ms, fmt) {
     const t0 = performance.now();
@@ -415,6 +427,7 @@
     sfx.loadTick(); sfx.bigBoom(); thud(); coinShower(16, 500);
     await wait(900);
     addEventListener('keydown', onSkip); box.addEventListener('pointerdown', onSkip);
+    const fadeTheme = sfx.theme(); // the Stormwind theme starts with the count and carries through the finale
 
     // Fireworks and coins keep going for the whole count.
     let volley = 0;
@@ -451,11 +464,11 @@
     $('pAmount').textContent = money(cents);
     setTitle(TIERS[tier].name);
     sfx.badaboom(); setTimeout(() => { sfx.bigBoom(); thud(); }, 420);
-    sfx.play(x >= TIERS[1].x ? 'fanfare_long' : 'fanfare', .8);
     setTimeout(() => sfx.voice(['assets/sfx/human_outstanding.ogg', 'assets/sfx/human_excellent.ogg'], .85), 900);
     coinShower(90, 2200); fireworks(x >= TIERS[1].x ? 22 : 14, 260); sfx.cheer();
     await wait(x >= TIERS[1].x ? 6500 : 4200);
     box.classList.remove('on');
+    fadeTheme();
     music.duck(false);
   }
 
@@ -608,7 +621,7 @@
     $('xpFill').style.width = '100%';
     setStatus('Level up!');
     await wait(1100);
-    panel('feature', `Level ${state.level}!`, '', `${lv.buff.name}: ${lv.buff.desc}`);
+    panel('feature', 'Level Up!', '', `${lv.buff.name}: ${lv.buff.desc}`);
     setStatus('Level up! The Darkmoon Faire opens with a buff');
     setTimeout(() => sfx.voice(['assets/sfx/human_outstanding.ogg', 'assets/sfx/human_excellent.ogg'], .8), 300);
     await wait(3000);
@@ -759,7 +772,7 @@
     $('payTable').innerHTML = rows.join('');
     const wild = E.SYMBOLS.find(s => s.wild);
     $('rushNote').textContent = `${E.HOLD.trigger} or more Gold Orbs anywhere open the Darkmoon Faire. The orbs lock in place and you get ${E.HOLD.respins} respins of the empty spots. Any prize ticket that lands locks too and resets the respins to ${E.HOLD.respins}. When the respins run out, every orb and ticket pays the credits shown on it. Tickets can also carry the Mini, Minor or Major. Fill all 15 spots to win the Grand.`;
-    $('levelNote').textContent = `Every paid spin earns experience. When the bar fills you level up, and the Darkmoon Faire opens at once with ${E.LEVEL.startOrbs} orbs and one buff: ${E.LEVEL_BUFFS.map(b => `${b.name} (${b.desc.toLowerCase()})`).join(', ')}. It takes about ${E.LEVEL.spins} spins a level on average.`;
+    $('levelNote').textContent = `Every paid spin earns experience and nudges the bar along. When it fills completely you level up, and the Darkmoon Faire opens at once with ${E.LEVEL.startOrbs} orbs and one buff: ${E.LEVEL_BUFFS.map(b => `${b.name} (${b.desc.toLowerCase()})`).join(', ')}. A level-up comes about every ${E.LEVEL.spins} spins on average.`;
     $('freeNote').textContent = `3, 4 or 5 Portals anywhere win ${E.SCATTER_SPINS[3]}, ${E.SCATTER_SPINS[4]} or ${E.SCATTER_SPINS[5]} free games. All line wins in free games are multiplied by ${E.FREE_SPIN_MULT}, and more Portals add more games. ${wild.name} is wild and substitutes for everything except Portals and Gold Orbs.`;
     $('jpNote').textContent = `Mini pays ${E.JACKPOTS.mini}× and Minor ${E.JACKPOTS.minor}× your total bet. Major starts at ${E.JACKPOTS.major}× and Grand at ${int(E.JACKPOTS.grand)}× your total bet, and both grow a little with every spin until someone (you) wins them. All four scale with your bet and denomination.`;
   }
@@ -767,7 +780,7 @@
     const s = state.stats;
     const rows = [['Spins', int(s.spins)], ['Wagered', money(s.wagered)], ['Won', money(s.won)],
       ['Return', s.wagered ? (100 * s.won / s.wagered).toFixed(1) + '%' : '—'], ['Biggest win', money(s.biggest)],
-      ['Level', int(state.level)], ['Darkmoon Faire bonuses', int(s.goldRush)], ['of which from level-ups', int(s.levels)], ['Free Games bonuses', int(s.freeGames)],
+      ['Darkmoon Faire bonuses', int(s.goldRush)], ['of which from level-ups', int(s.levels)], ['Free Games bonuses', int(s.freeGames)],
       ['Mini / Minor / Major / Grand', `${s.mini} / ${s.minor} / ${s.major} / ${s.grand}`], ['Bills inserted', money(s.bills)]];
     $('statsList').innerHTML = rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('');
   }

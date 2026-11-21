@@ -57,7 +57,9 @@
   // Darkmoon Faire straight away with one of these buffs.
   const LEVEL = {
     spins: 200,   // average paid spins per level
-    curve: 2.4,   // the bar is drawn on a curve so it sits near full: shown = 1 - (1 - xp)^curve
+    // The bar is a carrot on a stick. It never looks less than `barFloor` full, races up early, then
+    // creeps toward `barCeil`. It only reaches 100% on the spin that actually levels you up.
+    barFloor: 0.55, barCeil: 0.97, curve: 0.6,
     startOrbs: 5, // orbs you begin the level-up Faire with
   };
   const LEVEL_BUFFS = [
@@ -157,7 +159,10 @@
   // XP earned by one paid spin, as a fraction of a level.
   function xpGain(rng = Math.random) { return (0.5 + rng()) / LEVEL.spins; }
   // How full the bar is drawn for a given real progress (0..1).
-  function xpShown(xp) { return 1 - Math.pow(1 - Math.min(1, Math.max(0, xp)), LEVEL.curve); }
+  function xpShown(xp) {
+    if (xp >= 1) return 1;
+    return LEVEL.barFloor + (LEVEL.barCeil - LEVEL.barFloor) * Math.pow(Math.max(0, xp), LEVEL.curve);
+  }
 
   // A level-up: picks a buff and deals the starting orbs for its Faire.
   function levelUp(rng = Math.random) {
